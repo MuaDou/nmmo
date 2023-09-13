@@ -1,0 +1,305 @@
+challenge:
+  name: ijcai2022-neural-mmo
+  template: rl-evaluator
+
+
+services:
+  # updates issue page on gitlab
+  - name: gitlab-page-updates
+    image: aicrowd/gitlab-page-updates:generic-v3
+    env:
+      ARGO_TOKEN: "{argo_token}"
+      ARGO_INSECURE: "false"
+      EDGE_SKIP_CONDITION: "PVE-stage-1-run-1:aggregate-scores,PVE-stage-1-run-2:aggregate-scores,PVE-stage-1-run-3:aggregate-scores,PVE-stage-1-run-4:aggregate-scores,PVE-stage-1-run-5:aggregate-scores,PVE-stage-1-run-6:aggregate-scores,PVE-stage-1-run-7:aggregate-scores,PVE-stage-1-run-8:aggregate-scores,PVE-stage-1-run-9:aggregate-scores,PVE-stage-1-run-10:aggregate-scores,check-stage-2-eligibility:aggregate-scores"
+      UPDATE_FREQUENCY: 60
+    # todo: revert to neural mmo node group before challenge launch
+    tolerations:
+      - key: node-group
+        value: code-evaluation-spot-nodes
+    node_selector:
+      node-group: code-evaluation-spot-nodes
+
+
+docker:
+  name: runtime-setup
+  repo: neural-mmo
+  timeout: 3600
+  use_image_builder_api: false
+  dind: false
+  host: tcp://docker:2375
+
+  client_image: aicrowd/repo2docker:airprime-v2
+  tolerations:
+    - key: node-group
+      value: code-evaluation-spot-nodes
+  node_selector:
+    node-group: code-evaluation-spot-nodes
+  
+  dind_resources:
+    cpu: 1000m
+    memory: 3Gi
+
+
+evaluation:
+  gym_server_package_url: https://evaluations-api-s3.aws-internal.k8s.aicrowd.com/public/aicrowd-gym/49E37005-72E8-4EEB-8599-67AB76FF16A8/aicrowd_gym_internal-0.0.5-py3-none-any.whl
+  global:
+
+    files:
+      # -- Mounts `data/run_team.py` from current repo at `/home/aicrowd/run_team.py` in the submission pod
+      run_team.py: run_team.py
+      run.sh: run.sh
+
+    entrypoint: /home/aicrowd/run.sh
+
+    # todo: revert to neural mmo node group before challenge launch
+    tolerations:
+    - key: node-group
+      value: code-evaluation-spot-nodes
+    node_selector:
+      node-group: code-evaluation-spot-nodes
+
+    env:
+      NMMO_MAX_EPISODES: "1"
+      NMMO_MAX_STEPS_PER_EPISODE: "1024"
+      NMMO_PVE_STAGE1_PASS_VALUE: "0.8"
+      NMMO_PVE_STAGE2_PASS_VALUE: "0.8"
+      AICROWD_SUBMISSION_PATH: /home/aicrowd/my-submission
+
+    gym_server:
+      tolerations:
+      - key: node-group
+        value: code-evaluation-spot-nodes
+      node_selector:
+        node-group: code-evaluation-spot-nodes
+
+  runs:
+    - name: PVE-stage-1-run-1
+      logs: true
+      env:
+        NMMO_MODE: PVE_STAGE1
+        NMMO_SAVE_REPLAY: "1"
+      gym_server:
+        name: internal-PVE-stage-1-run-1-server
+        logs: false
+
+    - name: PVE-stage-1-run-2
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-2-server
+
+    - name: PVE-stage-1-run-3
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-3-server
+
+    - name: PVE-stage-1-run-4
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-4-server
+
+    - name: PVE-stage-1-run-5
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-5-server
+
+    - name: PVE-stage-1-run-6
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-6-server
+
+    - name: PVE-stage-1-run-7
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-7-server
+
+    - name: PVE-stage-1-run-8
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-8-server
+
+    - name: PVE-stage-1-run-9
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-9-server
+
+    - name: PVE-stage-1-run-10
+      env:
+        NMMO_MODE: PVE_STAGE1
+      gym_server:
+        name: internal-PVE-stage-1-run-10-server
+
+    - name: check-stage-2-eligibility
+      depends:
+        - PVE-stage-1-run-1
+        - PVE-stage-1-run-2
+        - PVE-stage-1-run-3
+        - PVE-stage-1-run-4
+        - PVE-stage-1-run-5
+        - PVE-stage-1-run-6
+        - PVE-stage-1-run-7
+        - PVE-stage-1-run-8
+        - PVE-stage-1-run-9
+        - PVE-stage-1-run-10
+      env:
+        NMMO_MODE: PVE_STAGE1_VALIDATION
+      gym_server:
+        name: internal-check-stage-2-eligibility-server
+
+
+    - name: PVE-stage-2-run-1
+      logs: true
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+        NMMO_SAVE_REPLAY: "1"
+      gym_server:
+        name: internal-PVE-stage-2-run-1-server
+        logs: false
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-2
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-2-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-3
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-3-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-4
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-4-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-5
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-5-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-6
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-6-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-7
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-7-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-8
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-8-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-9
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-9-server
+        resources:
+          cpu: 3
+
+    - name: PVE-stage-2-run-10
+      depends: ["check-stage-2-eligibility"]
+      env:
+        NMMO_MODE: PVE_STAGE2
+      gym_server:
+        name: internal-PVE-stage-2-run-10-server
+        resources:
+          cpu: 3
+
+  scoring:
+    name: aggregate-scores
+    timeout: 3600
+    env:
+      AICROWD_TARGET_PHASE: evaluation
+      NMMO_MODE: PVE_AGGREGATE
+      COS_ENDPOINT: "{cos_endpoint}"
+      COS_GLOBAL_ENDPOINT: "{cos_global_endpoint}"
+      COS_SECRET_KEY: "{cos_secret_key}"
+      COS_SECRET_ID: "{cos_secret_id}"
+      COS_REGION: "{cos_region}"
+      COS_BUCKET: "{cos_bucket}"
+
+  disks:
+    shared_disk:
+      enabled: true
+      storage_class: nfs-client
+    public_shared_disk:
+      enabled: true
+      storage_class: nfs-client
+
+
+# Webhooks configuration
+# These webhooks run once the evaluation is completed.
+notifications:
+  # Post evaluation status on AIcrowd slack channel
+  - name: slack
+    image: aicrowd/evaluations-api-slack-notifier:v1
+    env:
+      SLACK_WEBHOOK_URL: "{slack_webhook_url}"
+      CHALLENGE_NAME: "NMMO 2022"
+      CHALLENGE_URL: "https://www.aicrowd.com/challenges/..."
+    message:
+      name: "placeholder"
+      value: "placeholder"
+
+  # Update the submission score and evaluation status on AIcrowd website
+  - name: aicrowd-update
+    image: aicrowd/evaluations-api-notifier:v1.3
+    env:
+      TESTING: "random"
+    message:
+      name: placeholder
+      value: "placeholder"
+
+  # Update gitlab issue page with final scores
+  - name: gitlab-page-updates
+    image: aicrowd/gitlab-page-updates:generic-v3
+    env:
+      ARGO_TOKEN: "{argo_token}"
+      ARGO_INSECURE: "false"
+      EDGE_SKIP_CONDITION: "PVE-stage-1-run-1:aggregate-scores,PVE-stage-1-run-2:aggregate-scores,PVE-stage-1-run-3:aggregate-scores,PVE-stage-1-run-4:aggregate-scores,PVE-stage-1-run-5:aggregate-scores,PVE-stage-1-run-6:aggregate-scores,PVE-stage-1-run-7:aggregate-scores,PVE-stage-1-run-8:aggregate-scores,PVE-stage-1-run-9:aggregate-scores,PVE-stage-1-run-10:aggregate-scores,check-stage-2-eligibility:aggregate-scores"
+    message:
+      name: TESTING
+      value: "random"
+

@@ -1,0 +1,12 @@
+shared/
+__pycache__/
+*.code-workspace
+*.pyc
+tmp/
+keepers/stage2-*/
+keepers/stage3-*/
+keepers/bonus-*/
+nohup*
+tool/replays/
+tests/maps
+maps/

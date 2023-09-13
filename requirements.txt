@@ -1,0 +1,3 @@
+https://evaluations-api-s3.aws-internal.k8s.aicrowd.com/public/aicrowd-gym/49E37005-72E8-4EEB-8599-67AB76FF16A8/aicrowd_gym_internal-0.0.5-py3-none-any.whl
+dm-tree==0.1.6
+aicrowd-api==0.1.23

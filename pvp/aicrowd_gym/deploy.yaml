@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aicrowd-gym-pypi
+  labels:
+    app: aicrowd-gym-pypi
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: aicrowd-gym-pypi
+  template:
+    metadata:
+      labels:
+        app: aicrowd-gym-pypi
+    spec:
+      containers:
+      - name: aicrowd-gym-pypi
+        image: hkccr.ccs.tencentyun.com/neurips2022nmmo/aicrowd_gym:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 12345
+      tolerations:
+      - key: node-group
+        value: pvp
+      imagePullSecrets:
+      - name: qcloudregistrykey
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aicrowd-gym-pypi
+spec:
+  selector:
+    app: aicrowd-gym-pypi
+  ports:
+    - protocol: TCP
+      port: 12345
+      targetPort: 12345

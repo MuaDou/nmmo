@@ -1,0 +1,50 @@
+tournament: "final-top16"
+version: "test"
+
+mode: "tournament"
+# mode: "score"
+
+scheduleMatches:
+  env:
+    AICROWD_GRADER_IDS: "3778"
+    AICROWD_API_TOKEN: "2bd1cc575998585bf42cec5c7f76f0f5"
+    NMMO_NUM_PARALLEL_MATCH: "40"
+    NMMO_NUM_ROUNDS: "260"
+    NMMO_MIN_SCORE: "0.01"
+    NMMO_MODE: "PVP"
+    NMMO_TOURNAMENT: "{{ .Values.tournament }}"
+    LOGURU_LEVEL: "INFO"
+    # 2022-11-01 23:59:59 Los_Angeles / 2022-11-02 14:59:59 Shanghai
+    NMMO_DEADLINE: "1667372399"
+    # top16
+    NMMO_SPECIFIC_SUBMISSIONS: "205360,205308,205323,205343,203451,204709,205351,204437,205317,205379,200862,203443,205222,204419,199331,198822"
+    NMMO_POLICY_STORE_DIR: "/policy_store"
+    NMMO_SUBMISSION_DIR: "/submissions"
+    AICROWD_SHARED_DIR: "/shared"
+    NMMO_ROLLOUT_NAME: "WEEK_1"
+
+runMatch:
+  rollout:
+    env:
+      NMMO_MODE: "PVP"
+      NMMO_MAX_STEPS_PER_EPISODE: "1024"
+      AICROWD_SHARED_DIR: "/shared"
+      LOGURU_LEVEL: "INFO"
+      NMMO_PVP_MIN_REPLAY: "200" # 50, 3
+  submission:
+    env:
+      NMMO_MODE: "PVP"
+      AICROWD_SUBMISSION_PATH: "/home/aicrowd/my-submission"
+      LOGURU_LEVEL: "INFO"
+
+aggregate:
+  env:
+    NMMO_TOURNAMENT: "{{ .Values.tournament }}"  
+    AICROWD_SHARED_DIR: "/shared"
+    NMMO_MODE: "PVP_AGGREGATE"
+    LOGURU_LEVEL: "INFO"
+    AICROWD_GRADER_IDS: "3778"
+    AICROWD_API_TOKEN: "2bd1cc575998585bf42cec5c7f76f0f5"
+    NMMO_RENAME_REPLAY: "0"
+    NMMO_UPLOAD_REPLAY: "0"
+    NMMO_PVP_AGGREGATE_DRY_RUN: "1"

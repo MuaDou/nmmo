@@ -1,0 +1,5 @@
+ruamel.yaml
+cos-python-sdk-v5
+onnxruntime==1.11.0
+python-dateutil
+aicrowd-api==0.1.23
